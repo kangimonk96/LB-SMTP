@@ -1,0 +1,35 @@
+global
+        log /dev/log local0
+        log /dev/log local1 notice
+        chroot /var/lib/haproxy
+        stats timeout 30s
+        user haproxy
+        group haproxy
+        daemon
+
+defaults
+        log global
+        mode http
+        option httplog
+        option dontlognull
+        timeout connect 5000
+        timeout client 50000
+        timeout server 50000
+
+frontend ft_smtp
+        bind 0.0.0.0:26
+        mode tcp
+        timeout client 1m
+        log global
+        option tcplog
+        default_backend bk_postfix
+
+backend bk_postfix
+        mode tcp
+        no option http-server-close
+        balance roundrobin
+        log global
+        timeout server 1m
+        timeout connect 5s
+        server pmgMaster ip_local:26 check
+        server pmgNode ip_local:26 check
